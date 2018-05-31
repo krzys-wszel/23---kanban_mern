@@ -1,0 +1,17 @@
+.KanbanContainer {
+  background: #262d40;
+    text-align: center;
+}
+.AddLane {
+  padding: 5px;
+  margin: 10px;
+  border: 1px solid white;
+  border-radius: 5px;
+  color: white;
+  background: inherit;
+  opacity: 0.5;
+}
+.AddLane:hover {
+  opacity: 1;
+  cursor: pointer;
+}

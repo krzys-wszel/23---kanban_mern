@@ -1,0 +1,37 @@
+.Edit {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+.Value {
+  flex: 10;
+  background: inherit;
+  color: white;
+  font: inherit;
+}
+
+.Delete {
+  border: none;
+  flex: 1;
+  background: inherit;
+  color: white;
+  opacity: 0.5;
+  text-align: right;
+}
+
+.Delete:hover {
+  cursor: pointer;
+  opacity: 1;
+}
+
+.Input {
+  flex: 4;
+  background: inherit;
+  color: white;
+  font: inherit;
+  border: none;
+}
+
+.Input:active {
+  flex: 4;
+}
