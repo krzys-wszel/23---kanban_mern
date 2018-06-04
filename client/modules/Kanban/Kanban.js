@@ -1,61 +1,30 @@
-import React, { Component, PropTypes } from 'react';
+import React from 'react';
+import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { createLane, fetchLanes } from '../Lane/LaneActions';
-import { DragDropContext } from 'react-dnd';
-import HTML5Backend from 'react-dnd-html5-backend';
-import { compose } from 'redux';
-
 import Lanes from '../Lane/Lanes';
-
-// Import Style
 import styles from './Kanban.css';
+import { createLaneRequest, fetchLanes } from '../Lane/LaneActions';
 
-class Kanban extends Component {
-  componentDidMount() {
-    this.props.fetchLanes();
-  }
+const Kanban = (props) => (
+  <div>
+    <button className={styles.AddLane} onClick={() => props.createLane({ name: 'New lane' })}>Add lane</button>
+    <Lanes lanes={props.lanes} />
+  </div>
+);
 
-  render() {
-    const { lanes, createLane } = this.props;
-
-    return (
-      <div className={styles.KanbanContainer}>
-        <button 
-          className={styles.AddLane}
-          onClick={() => this.props.createLane({
-            name: `New Lane`
-          })}
-        >
-          Add lane
-        </button>
-        <Lanes
-          lanes={lanes}
-        />
-      </div>
-    );
-  }
-}
-
-const mapStateToProps = (state) => ({
-  lanes: state.lanes,
-  notes: state.notes
-});
-
-const mapDispatchToProps = (dispatch) => ({
-  dispatch,
-  createLane: lane => {
-    dispatch(createLane(lane))
-  },
-  fetchLanes: () => {
-    dispatch(fetchLanes())
-  }
-});
+Kanban.need = [() => { return fetchLanes(); }];
 
 Kanban.propTypes = {
-  lanes: PropTypes.array
+  lanes: PropTypes.array,
+  createLane: PropTypes.func,
 };
 
-export default compose(
-  connect(mapStateToProps, mapDispatchToProps),
-  DragDropContext(HTML5Backend)
-)(Kanban);
+const mapStateToProps = state => ({
+  lanes: Object.values(state.lanes),
+});
+
+const mapDispatchToProps = {
+  createLane: createLaneRequest,
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Kanban);

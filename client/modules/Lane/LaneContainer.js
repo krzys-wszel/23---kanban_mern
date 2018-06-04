@@ -1,29 +1,22 @@
 import { connect } from 'react-redux';
 import Lane from './Lane';
-import { updateLaneRequest, deleteLane, detachFromLane, attachToLane} from './LaneActions';
-import { createNote } from '../Note/NoteActions';
+import { deleteLaneRequest, updateLaneRequest, editLane } from './LaneActions';
+import { createNoteRequest } from '../Note/NoteActions';
 
-const mapStateToProps = (state, ownProps) => ({
-    notes: ownProps.lane.notes.map(noteId => state.notes.find(note => note._id === noteId)).filter(note => note)
-});
+const mapStateToProps = (state, ownProps) => {
+  return {
+    laneNotes: ownProps.lane.notes.map(noteId => state.notes[noteId])
+  };
+};
 
-const mapDispatchToProps = dispatch => ({
-  updateLane: (lane) => {
-    dispatch(updateLaneRequest(lane))
-  },
-  deleteLane: (laneId) => {
-    dispatch(deleteLane(laneId))
-  },
-  createNote: (laneId, note) => {
-    dispatch(createNote(laneId, note))
-  },
-  detachFromLane: (laneId, noteId) => {
-    dispatch(detachFromLane(laneId, noteId))
-  },
-  attachToLane: (laneId, noteId) => {
-    dispatch(attachToLane(laneId, noteId))
-  }
-});
+const mapDispatchToProps = {
+  editLane,
+  deleteLane: deleteLaneRequest,
+  updateLane: updateLaneRequest,
+  addNote: createNoteRequest,
+};
 
-export default connect(mapStateToProps, mapDispatchToProps)(Lane);
-
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(Lane);

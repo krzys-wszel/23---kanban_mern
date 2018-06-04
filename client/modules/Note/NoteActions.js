@@ -1,56 +1,71 @@
-import uuid from 'uuid';
-
 import callApi from '../../util/apiCaller';
-
-import { updateLane } from '../Lane/LaneActions';
 
 // Export Constants
 export const CREATE_NOTE = 'CREATE_NOTE';
-export const CREATE_NOTES = 'CREATE_NOTES';
 export const UPDATE_NOTE = 'UPDATE_NOTE';
 export const DELETE_NOTE = 'DELETE_NOTE';
+export const CREATE_NOTES = 'CREATE_NOTES';
+export const EDIT_NOTE = 'EDIT_NOTE';
 
 // Export Actions
-export function createNote(laneId, note) {
-  return dispatch => {
-    return callApi(`lanes/${laneId}/notes`, 'post', note).then(res => {
-      dispatch({
-        type: CREATE_NOTE,
-        note: res.note,
-      });      
-      const normalizedLaneNotes = res.lane.notes.map(note => note._id);
-      dispatch(updateLane(Object.assign({}, res.lane, { notes: normalizedLaneNotes })));
-    });
-  }
+export function createNote(note, laneId) {
+ return {
+   type: CREATE_NOTE,
+   laneId,
+   note,
+ };
 }
 
-export function createNotes(notes) {
-  return {
-    type: CREATE_NOTES,
-    notes
+export function createNoteRequest(note, laneId) {
+  return (dispatch) => {
+    return callApi('notes', 'post', { note, laneId }).then(noteResp => {
+      dispatch(createNote(noteResp, laneId));
+    });
   };
 }
 
-export function updateNote(laneId, note) {
-  return dispatch => {
-    return callApi(`lanes/${laneId}/notes/${note._id}`, 'put', note).then(res => {
-      dispatch({
-        type: UPDATE_NOTE,
-        note
-      })
-    })
-  }
+export function updateNote(note) {
+  return {
+    type: UPDATE_NOTE,
+    note,
+  };
 }
 
-export function deleteNote(laneId, noteId) {
-  return dispatch => {
-    return callApi(`lanes/${laneId}/notes/${noteId}`, 'delete').then(res =>{
-      dispatch({
-        type: DELETE_NOTE,
-        id: noteId
-      });
-      const normalizedLaneNotes = res.lane.notes.map(note => note._id);
-      dispatch(updateLane(Object.assign({}, res.lane, { notes: normalizedLaneNotes })));
+export function updateNoteRequest(note) {
+  return (dispatch) => {
+    return callApi(`notes/${note.id}`, 'put', note).then(() => {
+      dispatch(updateNote(note));
     });
-  }
+  };
 }
+
+
+export function deleteNote(noteId, laneId) {
+  return {
+    type: DELETE_NOTE,
+    noteId,
+    laneId,
+  };
+}
+
+export function deleteNoteRequest(noteId, laneId) {
+  return (dispatch) => {
+    return callApi(`notes/${noteId}`, 'delete').then(() => {
+      dispatch(deleteNote(noteId, laneId));
+    });
+  };
+}
+
+export function createNotes(notesData) {
+    return {
+      type: CREATE_NOTES,
+      notes: notesData,
+    }
+  }
+
+export function editNote(noteId) {
+    return {
+      type: EDIT_NOTE,
+      noteId,
+    };
+  }

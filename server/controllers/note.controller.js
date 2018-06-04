@@ -1,83 +1,60 @@
 import Note from '../models/note';
 import Lane from '../models/lane';
+import uuid from 'uuid';
 
+export function getSomething(req, res) {
+  return res.status(200).end();
+}
+
+//add new note
 export function addNote(req, res) {
-  if (!req.body.task) {
-    res.status(403).end();
-  } else {
-    new Note(req.body).save()
-    .then(savedNote => Promise.all([savedNote, Lane.findById(req.params.laneId)]))
-    .then(([savedNote, lane]) => {
-      if (lane) {
-        lane.notes.push(savedNote);
-        return Promise.all([savedNote, lane.save()]);
-      }
-    })
-    .then(([savedNote, savedLane]) => {
-      if (savedNote && savedLane) {
-        res.json({ note: savedNote, lane: savedLane });
-      } else {
-        res.status(404).end();
-      }
-    })
-    .catch(err => {
-      res.status(500).send(err);
-    });
-  }
-}
+  const { note, laneId } = req.body;
 
-export function getNote(req, res) {
-  Note.findById(req.params.noteId).exec()
-  .then(note => {
-    if (note) {
-      res.json({ note });
-    } else {
-      res.status(404).end();
+  if (!note || !note.task || !laneId) {
+    res.status(400).end();
+  }
+
+  const newNote = new Note({
+    task: note.task,
+  });
+
+  newNote.id = uuid();
+  newNote.save((err, saved) => {
+    if (err) {
+      res.status(500).send(err);
     }
-  })
-  .catch(err => {
-    res.status(500).send(err);
+    Lane.findOne({ id: laneId })
+      .then(lane => {
+        lane.notes.push(saved);
+        return lane.save();
+      })
+      .then(() => {
+        res.json(saved);
+      });
   });
 }
 
+//edit note
+export function editNote(req, res) {
+  Note.findOne({id: req.params.noteId})
+    .then((note) => {
+      note.task = req.body.task;
+      return note.save();
+    })
+    .then(() => {
+      res.json(200).end();
+    })
+}
+
+//delete note
 export function deleteNote(req, res) {
-  Lane.findById(req.params.laneId).exec()
-  .then(foundLane => {
-    if (foundLane) {
-      const index = foundLane.notes.findIndex(n => String(n._id) === req.params.noteId);
-      if (index >= 0) {
-        foundLane.notes.splice(index, 1);
-      }
-      return foundLane.save();
-    }
-  })
-  .then(foundLane => Promise.all([foundLane, Note.findByIdAndRemove(req.params.noteId).exec()]))
-  .then(([foundLane, removedNote]) => {
-    if (foundLane && removedNote) {
-      res.json({ lane: foundLane });
-    } else {
-      res.status(404).end();
-    }
-  })
-  .catch(err => {
-    res.status(500).send(err);
-  });
-}
-
-export function updateNote(req, res) {
-  if (!req.body.task) {
-    res.status(403).end();
-  } else {
-    Note.findByIdAndUpdate(req.params.noteId, { $set: { task: req.body.task } }).exec()
-    .then(note => {
-      if (note) {
-        res.status(200).end();
-      } else {
-        res.status(404).end();
-      }
-    })
-    .catch(err => {
+  Note.findOne({ id: req.params.noteId }).exec((err, note) => {
+    if (err) {
       res.status(500).send(err);
+    }
+
+    note.remove(() => {
+      res.status(200).end();
     });
-  }
+  });
 }
