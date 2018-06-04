@@ -1,72 +1,46 @@
-import React, { Component, PropTypes } from 'react';
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
-import * as laneActions from './LaneActions';
-import { createNote } from '../Note/NoteActions';
-import Notes from '../Note/Notes';
-import NotesContainer from '../Note/NotesContainer';
-import Edit from '../../components/Edit.js';
-import { DropTarget } from 'react-dnd';
-import ItemTypes from '../Kanban/itemTypes';
-import { compose } from 'redux';
+import React, { PropTypes } from 'react';
+import NotesContainer from '../Note/NoteContainer'
+import Edit from '../../components/Edit';
 
 // Import Style
 import styles from './Lane.css';
 
-class Lane extends Component {
+const Lane = (props) => {
+  const { lane, laneNotes, updateLane, addNote, deleteLane, editLane } = props;
+  const laneId = lane.id;
 
-  render() {
-    const { lane, notes, connectDropTarget,
-      createNote, updateLane, deleteLane } = this.props;
-
-    const laneId = lane._id;
-    return connectDropTarget(
-      <div className={styles.LaneContainer}>
-        <div className={styles.LaneHeader}>
-          <button
-            className={styles.LaneButton}
-            onClick={() => createNote(laneId, {task: `New Note`})}
-          >+</button>
-          <Edit
-            className={styles.LaneName}
-            value={lane.name}
-            onEdit={name => updateLane({_id: laneId, name})} 
-            placeholder="Enter Lane Name..."
-          />
-          <button 
-            className={styles.LaneButton}
-            onClick={() => deleteLane(laneId)}
-          >x</button>
+  return (
+    <div className={styles.Lane}>
+      <div className={styles.LaneHeader}>
+        <div className={styles.LaneDelete}>
+          <button onClick={() => deleteLane(laneId)}>X</button>
         </div>
-        <NotesContainer
-          notes={notes}
-          laneId={laneId}
-        />       
+        <Edit
+          className={styles.LaneName}
+          editing={lane.editing}
+          value={lane.name}
+          onValueClick={() => editLane(laneId)}
+          onUpdate={name => updateLane({ ...lane, name, editing: false })}
+        />
       </div>
-    );
-  }
-}
+      <div className={styles.LaneAddNote}>
+        <button onClick={() => addNote({ task: 'New Note' }, laneId)}>Add Note</button>
+      </div>
+      <NotesContainer
+        notes={laneNotes}
+        laneId={laneId}
+      />
+    </div>
+  );
+};
 
 Lane.propTypes = {
   lane: PropTypes.object,
-  notes: PropTypes.array
+  laneNotes: PropTypes.array,
+  addNote: PropTypes.func,
+  updateLane: PropTypes.func,
+  deleteLane: PropTypes.func,
+  editLane: PropTypes.func,
 };
 
-const noteTarget = {
-  hover(targetProps, monitor) {
-    const targetLaneId = targetProps.lane._id;
-    const sourceLaneId = monitor.getItem().laneId;
-    const noteId = monitor.getItem()._id;
-    if(targetLaneId !== sourceLaneId) {
-      targetProps.detachFromLane(sourceLaneId, noteId);
-      targetProps.attachToLane(targetLaneId, noteId);
-      monitor.getItem().laneId = targetLaneId;
-    }
-  }
-};
-
-
-export default DropTarget(ItemTypes.NOTE, noteTarget, (connect) => ({
-    connectDropTarget: connect.dropTarget()
-  })
-)(Lane)
+export default Lane;

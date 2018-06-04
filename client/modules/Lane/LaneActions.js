@@ -1,97 +1,86 @@
 import callApi from '../../util/apiCaller';
-
+import { lanes } from '../../util/schema';
 import { normalize } from 'normalizr';
-import { lanesSchema } from '../../util/normalizrSchema';
-
-import { createNotes } from '../Note/NoteActions';
+import { createNotes, deleteNotes } from '../Note/NoteActions';
 
 // Export Constants
 export const CREATE_LANE = 'CREATE_LANE';
-export const CREATE_LANES = 'CREATE_LANES';
 export const UPDATE_LANE = 'UPDATE_LANE';
 export const DELETE_LANE = 'DELETE_LANE';
-export const SWAP_NOTES = 'SWAP_NOTES';
-export const DETACH_FROM_LANE = 'DETACH_FROM_LANE';
-export const ATTACH_TO_LANE = 'ATTACH_TO_LANE';
+export const EDIT_LANE = 'EDIT_LANE';
+export const CREATE_LANES = 'CREATE_LANES';
 
 // Export Actions
 export function createLane(lane) {
-  return dispatch => {
-    return callApi('lanes', 'post', lane).then(res => {
-      dispatch({
-        type: CREATE_LANE,
-        lane: res.lane
-      });
-    });
-  }
+  return {
+    type: CREATE_LANE,
+    lane: {
+      notes: [],
+      ...lane,
+    },
+  };
 }
 
-export function createLanes(lanes) {
-  return {
-    type: CREATE_LANES,
-    lanes
+export function createLaneRequest(lane) {
+  return (dispatch) => {
+    return callApi('lanes', 'post', lane).then(res => {
+      dispatch(createLane(res));
+    });
   };
 }
 
 export function updateLane(lane) {
   return {
     type: UPDATE_LANE,
-    lane
-  }
+    lane,
+  };
 }
 
 export function updateLaneRequest(lane) {
-  return dispatch => {
-    return callApi(`lanes/${lane._id}`, 'put', lane).then(res => {
+  return (dispatch) => {
+    return callApi(`lanes/${lane.id}`, 'put', lane).then(() => {
       dispatch(updateLane(lane));
     });
-  }
+  };
+}
+  
+export function deleteLane(laneId) {
+  return {
+    type: DELETE_LANE,
+    laneId,
+  };
 }
 
-export function deleteLane(id) {
-  return dispatch => {
-    return callApi(`lanes/${id}`, 'delete').then(res => {
-      dispatch({
-        type: DELETE_LANE,
-        id
-      })
-    })
-  }
+export function deleteLaneRequest(laneId) {
+  return (dispatch) => {
+    return callApi(`lanes/${laneId}`, 'delete').then(() => {
+      dispatch(deleteLane(laneId));
+    });
+  };
+}
+
+export function editLane(laneId) {
+  return {
+    type: EDIT_LANE,
+    laneId,
+  };
+}
+
+export function createLanes(lanesData) {
+  return {
+    type: CREATE_LANES,
+    lanes: lanesData,
+  };
 }
 
 export function fetchLanes() {
-  return dispatch => {
+  return (dispatch) => {
     return callApi('lanes').then(res => {
-      const normalized = normalize(res.lanes, lanesSchema);
-      const lanes = normalized.entities.lanes || [];
-      const notes = normalized.entities.notes || [];
-      dispatch(createNotes(Object.values(notes)));
-      dispatch(createLanes(Object.values(lanes)));
+      const normalized = normalize(res.lanes, lanes);
+      const { lanes: normalizedLanes, notes } = normalized.entities;
+      dispatch(createLanes(normalizedLanes));
+      dispatch(createNotes(notes));
     });
-  }
-}
-
-export function swapNotes(laneId, sourceId, targetId) {
-  return {
-    type: SWAP_NOTES,
-    laneId,
-    sourceId,
-    targetId
   };
 }
 
-export function detachFromLane(laneId, noteId) {
-  return {
-    type: DETACH_FROM_LANE,
-    laneId,
-    noteId
-  };
-}
-
-export function attachToLane(laneId, noteId) {
-  return {
-    type: ATTACH_TO_LANE,
-    laneId,
-    noteId
-  };
-}
